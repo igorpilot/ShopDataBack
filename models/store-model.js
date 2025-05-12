@@ -64,6 +64,14 @@ const RowsCustomerSchema = new mongoose.Schema({
     numberOfOrder: { type: String, required: true },
     products: { type: [RowsSalesSchema], default: [] },
 });
+const RowsHistorySchema = new mongoose.Schema({
+    id: { type: String, required: true },
+    date: { type: String, required: true },
+    action: { type: String, required: true },
+    where: { type: String, required: true },
+    product: { type: String, required: true },
+    description:{ type: String, required: true },
+});
 const StoreSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -77,7 +85,7 @@ const StoreSchema = new mongoose.Schema({
     rowsAll: { type: [RowsAllSchema], default: [] },
     rowsDelivery: { type: [RowsDeliverySchema], default: [] },
     rowsCustomer: { type: [RowsCustomerSchema], default: [] },
-    rowsHistory: { type: [], default: [] },
+    rowsHistory: { type: [RowsHistorySchema], default: [] },
     numberOfOrder: { type: Number, default: 1000000 }
 });
 
