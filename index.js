@@ -32,7 +32,7 @@ app.use(errorMiddleware);
 const start = async () => {
     try {
         await mongoose.connect(process.env.DB_URL, { useUnifiedTopology: true, useNewUrlParser: true});
-        app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+        await app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
     } catch (error) {
         console.log(error);
     }
