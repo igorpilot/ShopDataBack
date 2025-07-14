@@ -81,6 +81,10 @@ router.get(
   ExcelController.exportInventory,
 );
 
+router.post("/exportSupply", authMiddleware, ExcelController.exportSupply);
+router.post("/exportSales", authMiddleware, ExcelController.exportSales);
+router.post("/exportReport", authMiddleware, ExcelController.exportReport);
+
 router.post("/getStore", OnlineStoreController.getStore);
 router.post("/saveLikes", OnlineStoreController.saveLikes);
 router.post("/mergeLikes", OnlineStoreController.mergeLikes);

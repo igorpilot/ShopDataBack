@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const RowsAllSchema = new mongoose.Schema({
   id: { type: String, required: true },
   image: { type: String, required: false, default: null },
-  isOnline: { type: Boolean, default: false },
+  isOnline: { type: Boolean, default: true },
   category: { type: String, required: false },
   name: { type: String, required: true },
   description: { type: String, required: false },
@@ -22,7 +22,7 @@ const RowsAllSchema = new mongoose.Schema({
 const RowsArrivalProductSchema = new mongoose.Schema({
   id: { type: String, required: true },
   image: { type: String, required: false, default: null },
-  isOnline: { type: Boolean, default: false },
+  isOnline: { type: Boolean, default: true },
   category: { type: String, required: false },
   name: { type: String, required: true },
   description: { type: String },
