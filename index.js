@@ -10,7 +10,7 @@ dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const app = express();
-const allowedOrigins = ['https://igorpilot.github.io', 'https://igorpilot.github.io/ShopData', 'https://igorpilot.github.io/AutoShop', 'http://localhost:3000', 'http://localhost:3001','http://localhost:5173', 'http://192.168.0.106:5173'];
+const allowedOrigins = ['https://igorpilot.github.io', 'https://igorpilot.github.io/ShopData', 'https://store-mam.vercel.app', 'https://igorpilot.github.io/AutoShop', 'http://localhost:3000', 'http://localhost:3001','http://localhost:5173', 'http://192.168.0.106:5173'];
 app.set('trust proxy', 1);
 app.use((req, res, next) => {
     next();
