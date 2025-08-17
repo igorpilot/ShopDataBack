@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import StoreModel from "../models/store-model.js";
+import { v1 } from "uuid";
 
 class ExcelService {
   #styles = {
@@ -374,7 +375,51 @@ class ExcelService {
 
     return await workbook.xlsx.writeBuffer();
   }
+  async importExcel(file, storeId) {
+    try {
+      const store = await StoreModel.findById(storeId);
+      if (!store) {
+        throw new Error("Магазин не знайдено");
+      }
+      const workbook = new ExcelJS.Workbook();
+      await workbook.xlsx.load(file.buffer);
 
+      const worksheet = workbook.worksheets[0];
+
+      const products = [];
+
+      worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return;
+
+        const [id, name, code, sellingPrice, descr, quantity, ,] =
+          row.values.slice(1);
+
+        products.push({
+          id: v1(),
+          image: null,
+          isOnline: false,
+          category: "",
+          name: name || " ",
+          description: "",
+          brand: "",
+          country: "",
+          quantity: Number(quantity) || 0,
+          purchasePrice: 1,
+          purchaseTotal: 1,
+          profitPrice: 1,
+          sellingPrice: Number(sellingPrice) || undefined,
+          code: code || "",
+        });
+      });
+      store.rowsAll = products;
+      await store.save();
+
+      return { success: true, message: "Товари завантажено та збережено" };
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  }
   async exportInventory(storeId) {
     try {
       const store = await StoreModel.findById(storeId);

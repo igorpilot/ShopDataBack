@@ -5,23 +5,19 @@ import ApiError from "../exceptions/api-error.js";
 class UserController {
   async registration(req, res, next) {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return next(
-          ApiError.BadRequest("Помилка при валідації", errors.array()),
-        );
-      }
+      // const errors = validationResult(req);
+      // if (!errors.isEmpty()) {
+      //   return next(
+      //     ApiError.BadRequest("Помилка при валідації", errors.array()),
+      //   );
+      // }
 
-      const { role, email, password, firstName, lastName, phoneNumber } =
-        req.body;
-
+      const {
+        formData
+      } = req.body;
+console.log(req.body)
       const userData = await UserService.registration(
-        role,
-        email,
-        password,
-        firstName,
-        lastName,
-        phoneNumber,
+        formData
       );
 
       res.cookie("refreshToken", userData.refreshToken, {

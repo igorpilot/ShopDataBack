@@ -1,7 +1,12 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const UserSchema = new mongoose.Schema({
-    role: { type: String, required: true },
+const UserSchema = new mongoose.Schema(
+  {
+    role: {
+      type: [String],
+      enum: ["customer", "seller", "admin"],
+      default: "customer",
+    },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     firstName: { type: String, required: true },
@@ -9,15 +14,32 @@ const UserSchema = new mongoose.Schema({
     phoneNumber: { type: String, required: true },
     activationLink: { type: String, required: true },
     isActivated: { type: Boolean, default: false },
-    customer: {
-        likedProducts: [],
-        cartProducts: [],
-        orders:[]},
-    stores: [{
+    sellers: [
+      {
+        _id: mongoose.Types.ObjectId,
+        firstName: String,
+        lastName: String,
+        stores: [
+          {
+            _id: mongoose.Schema.Types.ObjectId,
+            title: String,
+            description: String,
+          },
+        ],
+      },
+    ],
+    stores: [
+      {
         _id: mongoose.Schema.Types.ObjectId,
         title: String,
-        description: String
-    }]
-}, { timestamps: true });
+        description: String,
+      },
+    ],
+    likedProducts: [],
+    cartProducts: [],
+    orders: [],
+  },
+  { timestamps: true },
+);
 
-export default mongoose.model('User', UserSchema);
+export default mongoose.model("User", UserSchema);

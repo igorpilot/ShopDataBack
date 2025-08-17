@@ -55,7 +55,7 @@ class StoreController {
       const updatedStore = await StoreService.addCategoryOrSupplier(
         label,
         value,
-        storeId,
+        storeId
       );
       return res.json(updatedStore);
     } catch (error) {
@@ -69,7 +69,7 @@ class StoreController {
       const updatedStore = await StoreService.deleteCategoryOrSupplier(
         label,
         value,
-        storeId,
+        storeId
       );
       return res.json(updatedStore);
     } catch (error) {
@@ -84,7 +84,7 @@ class StoreController {
         title,
         label,
         value,
-        storeId,
+        storeId
       );
       return res.json(updatedStore);
     } catch (error) {
@@ -97,7 +97,7 @@ class StoreController {
       const { supplierInfo, storeId } = req.body;
       const updatedStore = await StoreService.addDelivery(
         supplierInfo,
-        storeId,
+        storeId
       );
       return res.json(updatedStore);
     } catch (error) {
@@ -161,7 +161,7 @@ class StoreController {
       const { customerInfo, storeId } = req.body;
       const updatedStore = await StoreService.addCustomer(
         customerInfo,
-        storeId,
+        storeId
       );
       return res.json(updatedStore);
     } catch (error) {
@@ -175,7 +175,7 @@ class StoreController {
       const updatedStore = await StoreService.addSalesProduct(
         newProduct,
         storeId,
-        customerId,
+        customerId
       );
       return res.json(updatedStore);
     } catch (error) {
@@ -211,7 +211,7 @@ class StoreController {
         history,
         storeId,
         deliveryId,
-        customerId,
+        customerId
       );
       return res.json(updatedStore);
     } catch (error) {
@@ -224,7 +224,7 @@ class StoreController {
       const { value, storeId } = req.body;
       const updatedStore = await StoreService.changeNumberOfOrder(
         value,
-        storeId,
+        storeId
       );
       return res.json(updatedStore);
     } catch (error) {
@@ -236,7 +236,7 @@ class StoreController {
       const { value, storeId } = req.body;
       const updatedStore = await StoreService.changeStoreCurrency(
         value,
-        storeId,
+        storeId
       );
       return res.json(updatedStore);
     } catch (error) {
@@ -249,10 +249,21 @@ class StoreController {
       const updatedStore = await StoreService.changeTitleOrDescriptionStore(
         title,
         value,
-        storeId,
+        storeId
       );
       return res.json(updatedStore);
     } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  }
+  async changeOrderStatus(req, res) {
+    try {
+      const { storeId, orderId, status, trackingNumber } = req.body;
+      const updatedStore = await StoreService.changeOrderStatus(
+        storeId, orderId, status, trackingNumber
+      );
+      return res.json(updatedStore);
+    } catch (e) {
       res.status(400).json({ message: error.message });
     }
   }

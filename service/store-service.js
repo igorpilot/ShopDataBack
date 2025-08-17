@@ -592,6 +592,31 @@ class StoreService {
       throw error;
     }
   }
+  async changeOrderStatus(storeId, orderId, status, trackingNumber) {
+    try {
+      const store = await StoreModel.findById(storeId);
+      if (!store) {
+        throw new Error("Магазин не знайдено");
+      }
+      const orderIndexOnline = store.onlineOrders.findIndex((o) => o.id === orderId);
+      const orderIndexCustomer = store.rowsCustomer.findIndex((o) => o.id === orderId);
+    if (orderIndexOnline === -1) {
+      throw new Error("Це замовлення не знайдено");
+    }
+    store.onlineOrders[orderIndexOnline].status = status;
+    store.rowsCustomer[orderIndexCustomer].status = status
+    store.onlineOrders[orderIndexOnline].statusUpdatedAt = new Date();
+
+    if (trackingNumber) {
+      store.onlineOrders[orderIndexOnline].trackingNumber = trackingNumber;
+    }
+      await store.save();
+      return store;
+    } catch (e) {
+      console.log("❌ Помилка в changeOrderStatus():", e);
+      throw e;
+    }
+  }
 }
 
 export default new StoreService();

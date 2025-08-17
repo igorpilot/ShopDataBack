@@ -11,13 +11,22 @@ import ResetTokenModel from "../models/reset-token-model.js";
 dotenv.config();
 
 class UserService {
-  async registration(role, email, password, firstName, lastName, phoneNumber) {
+  async registration(
+    formData
+  ) {
     try {
+      const {role,
+    email,
+    password,
+    firstName,
+    lastName,
+    phoneNumber,
+    idAdmin} = formData
       const emailLow = email.toLowerCase();
       const candidate = await UserModel.findOne({ email: emailLow });
       if (candidate) {
         throw ApiError.BadRequest(
-          `Користувач з такою електронною адресою ${emailLow} вже існує`,
+          `Користувач з такою електронною адресою ${emailLow} вже існує`
         );
       }
       const hashPassword = await bcrypt.hash(password, 3);
@@ -31,9 +40,19 @@ class UserService {
         phoneNumber,
         activationLink,
       });
+      if (idAdmin) {
+        const admin = await UserModel.findById(idAdmin);
+        admin.sellers.push({
+          sellerId: user._id,
+          firstName,
+          lastName,
+          stores: [],
+        });
+        admin.save();
+      }
       await MailService.sendActivationMail(
         emailLow,
-        `${process.env.API_URL}/api/activate/${activationLink}`,
+        `${process.env.API_URL}/api/activate/${activationLink}`
       );
       const userDto = new UserDto(user);
       const tokens = TokenService.generateTokens({ ...userDto });
@@ -57,7 +76,7 @@ class UserService {
     const user = await UserModel.findOne({ email: emailLow });
     if (!user) {
       throw ApiError.BadRequest(
-        "Користувач з такою електронною адресою не існує",
+        "Користувач з такою електронною адресою не існує"
       );
     }
     const isPassEqual = await bcrypt.compare(password, user.password);
