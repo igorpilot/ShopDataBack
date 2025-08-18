@@ -74,7 +74,7 @@ class OnlineStoreService {
       // const user = await UserModel.findById(userId)
       // if (!user) throw new Error("User not found");
       //return user.orders
-      const store = await StoreModel.findOne({ title: "AvtoSuperStar" });
+      const store = await StoreModel.findOne({ title:  userId });
       return store.onlineOrders
     } catch(error) {
       console.log("Error in getOrders", error);
@@ -88,7 +88,7 @@ class OnlineStoreService {
       // const order = user.orders.find(order=>order.id===orderId)
       // if (!order) throw new Error("Order not found");
       // return order
-      const store = await StoreModel.findOne({ title: "AvtoSuperStar" });
+      const store = await StoreModel.findOne({ title: userId });
       return store.onlineOrders.find(o=>o.id===orderId)
     } catch(error) {
       console.log("Error in getOrders", error);

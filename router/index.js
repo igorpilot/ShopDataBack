@@ -29,6 +29,7 @@ router.post(
   authMiddleware,
   StoreController.addCategoryOrSupplier
 );
+router.put("/category", authMiddleware, upload.single("image"), StoreController.addChangeDeleteCategory)
 router.get("/stores/:userId", authMiddleware, StoreController.getUserStores);
 router.get("/store/:storeId", authMiddleware, StoreController.getUserStore);
 router.put(

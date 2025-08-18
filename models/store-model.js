@@ -5,6 +5,7 @@ const RowsAllSchema = new mongoose.Schema({
   image: { type: String, required: false, default: null },
   isOnline: { type: Boolean, default: true },
   category: { type: String, required: false },
+  subcategory: { type: String, required: false },
   name: { type: String, required: true },
   description: { type: String, required: false },
   brand: { type: String, required: false },
@@ -46,6 +47,7 @@ const RowsDeliverySchema = new mongoose.Schema({
 
 const RowsSalesSchema = new mongoose.Schema({
   id: { type: String, required: true },
+  image: { type: String, required: false, default: null },
   category: { type: String, required: false },
   name: { type: String, required: true },
   description: { type: String },
@@ -59,7 +61,7 @@ const RowsSalesSchema = new mongoose.Schema({
 });
 const RowsCustomerSchema = new mongoose.Schema({
   id: { type: String, required: true },
-  online: {type:Boolean, default: false},
+  online: { type: Boolean, default: false },
   nameOfCustomer: { type: String, required: false },
   date: { type: String, required: true },
   price: { type: Number, required: true },
@@ -96,7 +98,8 @@ const OnlineOrderSchema = new mongoose.Schema({
   total: { type: Number, required: true },
   numberOfOrder: { type: String, required: true },
   products: { type: [RowsSalesSchema], default: [] },
-  comment: { type: String },
+  customerComment: { type: String },
+  sellerComment: { type: String },
   status: {
     type: String,
     enum: ["new", "processing", "shipped", "delivered", "cancelled"],
@@ -105,7 +108,6 @@ const OnlineOrderSchema = new mongoose.Schema({
   statusUpdatedAt: { type: Date },
   trackingNumber: { type: String },
   trackingUrl: { type: String },
-  
 });
 const RowsHistorySchema = new mongoose.Schema({
   id: { type: String, required: true },
@@ -127,7 +129,16 @@ const StoreSchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
   },
-  menu: { type: [String], default: [] },
+  categories: {
+  type: [
+    {
+      name: { type: String, required: true },
+      image: { type: String, default: " " },
+      subcategories: { type: [String], default: [] }
+    }
+  ],
+  default: []
+},
   brands: { type: [String], default: [] },
   supplier: { type: [String], default: [] },
   rowsAll: { type: [RowsAllSchema], default: [] },

@@ -62,7 +62,18 @@ class StoreController {
       res.status(400).json({ message: error.message });
     }
   }
-
+  async addChangeDeleteCategory(req, res) {
+    try {
+      const { ...formData } = req.body;
+      const file = req.file;
+      const updatedStore = await StoreService.addChangeDeleteCategory(
+        formData, file
+      );
+      return res.json(updatedStore);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  }
   async deleteCategoryOrSupplier(req, res) {
     try {
       const { label, value, storeId } = req.body;
@@ -260,7 +271,10 @@ class StoreController {
     try {
       const { storeId, orderId, status, trackingNumber } = req.body;
       const updatedStore = await StoreService.changeOrderStatus(
-        storeId, orderId, status, trackingNumber
+        storeId,
+        orderId,
+        status,
+        trackingNumber
       );
       return res.json(updatedStore);
     } catch (e) {

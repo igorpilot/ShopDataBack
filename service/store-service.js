@@ -41,7 +41,7 @@ class StoreService {
 
       if (!store) {
         throw new Error(
-          "Магазин не знайдено або у вас немає прав на його видалення",
+          "Магазин не знайдено або у вас немає прав на його видалення"
         );
       }
       const user = await UserModel.findById(userId);
@@ -112,7 +112,49 @@ class StoreService {
       throw error;
     }
   }
+  async addChangeDeleteCategory(formData, file) {
+    try {
+      const { action, storeId } = formData;
+      const oldCategory = formData.oldCategory ? JSON.parse(formData.oldCategory) : null;
+    const newCategory = formData.newCategory ? JSON.parse(formData.newCategory) : null;
 
+      
+      if (!mongoose.Types.ObjectId.isValid(storeId)) {
+        throw new Error("Невірний формат storeId");
+      }
+      const store = await StoreModel.findById(storeId);
+      if (!store) {
+        throw new Error("Магазин не знайдено");
+      }
+      if (
+        file &&
+        (action === "add" || action === "change") &&
+        oldCategory.image !== newCategory.image
+      ) {
+        newCategory.image = await this.uploadImageToCloudinary(file);
+      }
+      if (action === "add") {
+        store.categories = [...store.categories, newCategory];
+      } else if (action === "change") {
+        const index = store.categories.findIndex(
+          (item) => item.name.toUpperCase() === oldCategory.name.toUpperCase() 
+        );
+        if (index === -1) {
+          throw new Error("Категорія не знайдена");
+        }
+        store.categories[index] = newCategory;
+      } else if (action === "delete") {
+        store.categories = store.categories.filter(
+          (item) => item.name !== oldCategory.name
+        );
+      }
+      await store.save();
+      return store;
+    } catch (error) {
+      console.error("❌ Помилка в addChangeDeleteCategory():", error);
+      throw error;
+    }
+  }
   async deleteCategoryOrSupplier(label, value, storeId) {
     try {
       if (!mongoose.Types.ObjectId.isValid(storeId)) {
@@ -126,15 +168,15 @@ class StoreService {
 
       if (label === "menu") {
         store.menu = store.menu.filter(
-          (item) => item.toUpperCase() !== value.toUpperCase(),
+          (item) => item.toUpperCase() !== value.toUpperCase()
         );
       } else if (label === "supplier") {
         store.supplier = store.supplier.filter(
-          (item) => item.toUpperCase() !== value.toUpperCase(),
+          (item) => item.toUpperCase() !== value.toUpperCase()
         );
       } else if (label === "brand") {
         store.brands = store.brands.filter(
-          (item) => item.toUpperCase() !== value.toUpperCase(),
+          (item) => item.toUpperCase() !== value.toUpperCase()
         );
       } else {
         throw new Error("Невідомий тип оновлення");
@@ -157,7 +199,7 @@ class StoreService {
 
       if (title === "menu") {
         const index = store.menu.findIndex(
-          (item) => item.toUpperCase() === oldValue.toUpperCase(),
+          (item) => item.toUpperCase() === oldValue.toUpperCase()
         );
         if (index === -1) {
           throw new Error("Категорія не знайдена");
@@ -166,7 +208,7 @@ class StoreService {
         store.markModified("menu");
       } else if (title === "supplier") {
         const index = store.supplier.findIndex(
-          (item) => item.toUpperCase() === oldValue.toUpperCase(),
+          (item) => item.toUpperCase() === oldValue.toUpperCase()
         );
         if (index === -1) {
           throw new Error("Постачальник не знайдений");
@@ -175,7 +217,7 @@ class StoreService {
         store.markModified("supplier");
       } else if (title === "brand") {
         const index = store.brands.findIndex(
-          (item) => item.toUpperCase() === oldValue.toUpperCase(),
+          (item) => item.toUpperCase() === oldValue.toUpperCase()
         );
         if (index === -1) {
           throw new Error("Бренд не знайдений");
@@ -241,7 +283,7 @@ class StoreService {
       ) {
         // throw new StoreServiceError('name, quantity, and purchasePrice are required and must be valid', 400);
         console.log(
-          "name, quantity, and purchasePrice are required and must be valid",
+          "name, quantity, and purchasePrice are required and must be valid"
         );
       }
 
@@ -253,7 +295,7 @@ class StoreService {
       }
 
       const rowDelivery = store.rowsDelivery.find(
-        (row) => row.id === deliveryId,
+        (row) => row.id === deliveryId
       );
       if (!rowDelivery) {
         // throw new StoreServiceError('Delivery not found', 404);
@@ -273,7 +315,7 @@ class StoreService {
       };
 
       const existProduct = store.rowsAll.find(
-        (p) => p.id === productPayload.id,
+        (p) => p.id === productPayload.id
       );
       if (!existProduct) {
         rowDelivery.products = [{ ...productPayload }, ...rowDelivery.products];
@@ -291,7 +333,7 @@ class StoreService {
 
       rowDelivery.price = rowDelivery.products.reduce(
         (sum, row) => sum + row.quantity * row.purchasePrice,
-        0,
+        0
       );
 
       await store.save();
@@ -327,7 +369,7 @@ class StoreService {
         throw new Error("Магазин не знайдено");
       }
       const rowCustomer = store.rowsCustomer.find(
-        (row) => row.id === customerId,
+        (row) => row.id === customerId
       );
       if (newProduct.id === "") {
         rowCustomer.products = [
@@ -336,7 +378,7 @@ class StoreService {
         ];
         rowCustomer.price = rowCustomer.products.reduce(
           (sum, row) => sum + row.quantity * row.sellingPrice,
-          0,
+          0
         );
       } else {
         const existProduct = store.rowsAll.find((p) => p.id === newProduct.id);
@@ -346,7 +388,7 @@ class StoreService {
         ];
         rowCustomer.price = rowCustomer.products.reduce(
           (sum, row) => sum + row.quantity * row.sellingPrice,
-          0,
+          0
         );
         if (existProduct) {
           Object.assign(existProduct, {
@@ -394,7 +436,7 @@ class StoreService {
       }
 
       let productInRowsAll = store.rowsAll.find(
-        (row) => row.id === productData.id,
+        (row) => row.id === productData.id
       );
       let imageUrl = productData.image || null;
       if (file) {
@@ -422,13 +464,13 @@ class StoreService {
       // Оновлення в rowsDelivery, якщо є deliveryId
       if (deliveryId) {
         const rowDelivery = store.rowsDelivery.find(
-          (row) => row.id === deliveryId,
+          (row) => row.id === deliveryId
         );
         if (!rowDelivery) {
           //  throw new StoreServiceError('Delivery not found', 404);
         }
         const product = rowDelivery.products.find(
-          (p) => p.id === productPayload.id,
+          (p) => p.id === productPayload.id
         );
         if (!product) {
           // throw new StoreServiceError('Product not found in delivery', 404);
@@ -438,18 +480,18 @@ class StoreService {
           productInRowsAll.quantity + productPayload.quantityDifference;
         rowDelivery.price = rowDelivery.products.reduce(
           (sum, row) => sum + row.quantity * row.purchasePrice,
-          0,
+          0
         );
       }
       if (customerId) {
         const rowCustomer = store.rowsCustomer.find(
-          (row) => row.id === customerId,
+          (row) => row.id === customerId
         );
         if (!rowCustomer) {
           // throw new StoreServiceError('Customer not found', 404);
         }
         const product = rowCustomer.products.find(
-          (p) => p.id === productPayload.id,
+          (p) => p.id === productPayload.id
         );
         if (!product) {
           // throw new StoreServiceError('Product not found in customer', 404);
@@ -459,7 +501,7 @@ class StoreService {
           productInRowsAll.quantity - productPayload.quantityDifference;
         rowCustomer.price = rowCustomer.products.reduce(
           (sum, row) => sum + row.quantity * row.sellingPrice,
-          0,
+          0
         );
       }
 
@@ -486,10 +528,10 @@ class StoreService {
       let productInRowsAll = store.rowsAll.find((p) => p.id === productData.id);
       if (deliveryId) {
         const deliveryRow = store.rowsDelivery.find(
-          (row) => row.id === deliveryId,
+          (row) => row.id === deliveryId
         );
         const deliveryProduct = deliveryRow.products.find(
-          (p) => p.id === productData.id,
+          (p) => p.id === productData.id
         );
         if (deliveryRow) {
           const updatedProduct = {
@@ -497,15 +539,15 @@ class StoreService {
             quantity: productInRowsAll.quantity - deliveryProduct.quantity,
           };
           store.rowsAll = store.rowsAll.map((p) =>
-            p.id === productData.id ? updatedProduct : p,
+            p.id === productData.id ? updatedProduct : p
           );
           deliveryRow.products = deliveryRow.products.filter(
-            (p) => p.id !== productData.id,
+            (p) => p.id !== productData.id
           );
         }
         deliveryRow.price = deliveryRow.products.reduce(
           (sum, row) => sum + row.quantity * row.purchasePrice,
-          0,
+          0
         );
       }
       if (deliveryId === undefined && customerId === undefined) {
@@ -514,10 +556,10 @@ class StoreService {
       }
       if (customerId) {
         const customerRow = store.rowsCustomer.find(
-          (row) => row.id === customerId,
+          (row) => row.id === customerId
         );
         const customerProduct = customerRow.products.find(
-          (p) => p.id === productData.id,
+          (p) => p.id === productData.id
         );
         if (customerRow) {
           const updatedProduct = {
@@ -525,15 +567,15 @@ class StoreService {
             quantity: productInRowsAll.quantity + customerProduct.quantity,
           };
           store.rowsAll = store.rowsAll.map((p) =>
-            p.id === productData.id ? updatedProduct : p,
+            p.id === productData.id ? updatedProduct : p
           );
           customerRow.products = customerRow.products.filter(
-            (p) => p.id !== productData.id,
+            (p) => p.id !== productData.id
           );
         }
         customerRow.price = customerRow.products.reduce(
           (sum, row) => sum + row.quantity * row.sellingPrice,
-          0,
+          0
         );
       }
       store.rowsHistory = [history, ...store.rowsHistory];
@@ -598,18 +640,22 @@ class StoreService {
       if (!store) {
         throw new Error("Магазин не знайдено");
       }
-      const orderIndexOnline = store.onlineOrders.findIndex((o) => o.id === orderId);
-      const orderIndexCustomer = store.rowsCustomer.findIndex((o) => o.id === orderId);
-    if (orderIndexOnline === -1) {
-      throw new Error("Це замовлення не знайдено");
-    }
-    store.onlineOrders[orderIndexOnline].status = status;
-    store.rowsCustomer[orderIndexCustomer].status = status
-    store.onlineOrders[orderIndexOnline].statusUpdatedAt = new Date();
+      const orderIndexOnline = store.onlineOrders.findIndex(
+        (o) => o.id === orderId
+      );
+      const orderIndexCustomer = store.rowsCustomer.findIndex(
+        (o) => o.id === orderId
+      );
+      if (orderIndexOnline === -1) {
+        throw new Error("Це замовлення не знайдено");
+      }
+      store.onlineOrders[orderIndexOnline].status = status;
+      store.rowsCustomer[orderIndexCustomer].status = status;
+      store.onlineOrders[orderIndexOnline].statusUpdatedAt = new Date();
 
-    if (trackingNumber) {
-      store.onlineOrders[orderIndexOnline].trackingNumber = trackingNumber;
-    }
+      if (trackingNumber) {
+        store.onlineOrders[orderIndexOnline].trackingNumber = trackingNumber;
+      }
       await store.save();
       return store;
     } catch (e) {
