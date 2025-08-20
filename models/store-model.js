@@ -86,7 +86,7 @@ const OnlineOrderSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ["credit-card", "pay-on-delivery"],
+    enum: ['in-store', "credit-card", "pay-on-delivery"],
     required: true,
   },
   city: { type: String, required: true },
