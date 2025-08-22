@@ -7,72 +7,21 @@ import ApiError from "../exceptions/api-error.js";
 import { v4 } from "uuid";
 import TokenService from "./token-service.js";
 import ResetTokenModel from "../models/reset-token-model.js";
-
 dotenv.config();
-// async registration(formData) {
-//     try {
-//       const {
-//         role,
-//         email,
-//         password,
-//         firstName,
-//         lastName,
-//         phoneNumber,
-//         customerStoreId,
-//         idAdmin,
-//       } = formData;
-//       const emailLow = email.toLowerCase();
-//       const candidate = await UserModel.findOne({ email: emailLow });
-//       if (candidate) {
-//         throw ApiError.BadRequest(
-//           `Користувач з такою електронною адресою ${emailLow} вже існує`
-//         );
-//       }
-//       const hashPassword = await bcrypt.hash(password, 3);
-//       const activationLink = v4();
-//       const user = await UserModel.create({
-//         role,
-//         email: emailLow,
-//         password: hashPassword,
-//         firstName,
-//         lastName,
-//         phoneNumber,
-//         activationLink,
-//       });
-//       if (idAdmin) {
-//         const admin = await UserModel.findById(idAdmin);
-//         admin.sellers.push({
-//           sellerId: user._id,
-//           firstName,
-//           lastName,
-//           stores: [],
-//         });
-//         admin.save();
-//       }
-//       await MailService.sendActivationMail(
-//         emailLow,
-//         `${process.env.API_URL}/api/activate/${activationLink}`
-//       );
-//       const userDto = new UserDto(user);
-//       const tokens = TokenService.generateTokens({ ...userDto });
-//       await TokenService.saveToken(userDto.id, tokens.refreshToken);
-//       return { ...tokens, user: userDto };
-//     } catch (error) {
-//       console.error("❌ Помилка в registration():", error);
-//       throw error;
-//     }
-//   }
 class UserService {
-  async registration(formData) {
+  async registration(
+    formData
+  ) {
     try {
-      const { email, password, customerStoreId, role, idAdmin } = formData;
+      const {role,
+    email,
+    password,
+    firstName,
+    lastName,
+    phoneNumber,
+    idAdmin} = formData
       const emailLow = email.toLowerCase();
-      const candidate = await UserModel.findOne({
-        email: emailLow,
-        role,
-        customerStoreId: customerStoreId || null,
-      });
-
+      const candidate = await UserModel.findOne({ email: emailLow });
       if (candidate) {
         throw ApiError.BadRequest(
           `Користувач з такою електронною адресою ${emailLow} вже існує`
@@ -81,19 +30,23 @@ class UserService {
       const hashPassword = await bcrypt.hash(password, 3);
       const activationLink = v4();
       const user = await UserModel.create({
-        ...formData,
-        password: hashPassword,
+        role,
         email: emailLow,
+        password: hashPassword,
+        firstName,
+        lastName,
+        phoneNumber,
         activationLink,
       });
       if (idAdmin) {
         const admin = await UserModel.findById(idAdmin);
         admin.sellers.push({
           sellerId: user._id,
-          firstName: user.firstName,
-          lastName: user.lastName,
+          firstName,
+          lastName,
+          stores: [],
         });
-        await admin.save();
+        admin.save();
       }
       await MailService.sendActivationMail(
         emailLow,
@@ -101,7 +54,7 @@ class UserService {
       );
       const userDto = new UserDto(user);
       const tokens = TokenService.generateTokens({ ...userDto });
-      await TokenService.saveToken(userDto, tokens.refreshToken);
+      await TokenService.saveToken(userDto.id, tokens.refreshToken);
       return { ...tokens, user: userDto };
     } catch (error) {
       console.error("❌ Помилка в registration():", error);
@@ -116,14 +69,9 @@ class UserService {
     user.isActivated = true;
     await user.save();
   }
-  async login(formData) {
-    const { email, password, role, customerStoreId } = formData;
+  async login(email, password) {
     const emailLow = email.toLowerCase();
-    const query = { email: emailLow, customerStoreId: customerStoreId || null };
-
-    if (role) query.role = role;
-
-    const user = await UserModel.findOne(query);
+    const user = await UserModel.findOne({ email: emailLow });
     if (!user) {
       throw ApiError.BadRequest(
         "Користувач з такою електронною адресою не існує"
@@ -135,7 +83,7 @@ class UserService {
     }
     const userDto = new UserDto(user);
     const tokens = TokenService.generateTokens({ ...userDto });
-    await TokenService.saveToken(userDto, tokens.refreshToken);
+    await TokenService.saveToken(userDto._id, tokens.refreshToken);
     return { ...tokens, user: userDto };
   }
   async logout(refreshToken) {
@@ -153,8 +101,7 @@ class UserService {
       throw new Error("Внутрішня помилка сервера під час logout");
     }
   }
-  async refresh(refreshToken, storeId) {
-    console.log(storeId);
+  async refresh(refreshToken) {
     if (!refreshToken) {
       throw ApiError.UnauthorizedError("Refresh token missing");
     }
@@ -163,19 +110,6 @@ class UserService {
     if (!userData || !tokenFromDB) {
       throw ApiError.UnauthorizedError("Invalid refresh token");
     }
-    console.log(tokenFromDB.customerStoreId);
-    console.log("token ", tokenFromDB);
-    if (storeId) {
-      // якщо storeId передано, то це магазин
-      if (tokenFromDB.customerStoreId !== storeId) {
-        throw ApiError.UnauthorizedError("Token not valid for this store");
-      }
-    } else {
-      // адмінка, storeId не передано, токен має бути з customerStoreId = null
-      if (tokenFromDB.customerStoreId !== null) {
-        throw ApiError.UnauthorizedError("Token not valid for admin panel");
-      }
-    }
     const user = await UserModel.findOne({ email: userData.email });
     if (!user) {
       throw ApiError.UnauthorizedError("User not found");
@@ -183,7 +117,7 @@ class UserService {
     const userDto = new UserDto(user);
     const tokens = TokenService.generateTokens({ ...userDto });
 
-    await TokenService.saveToken(userDto, tokens.refreshToken);
+    await TokenService.saveToken(userDto._id, tokens.refreshToken);
 
     return { ...tokens, user: userDto };
   }
@@ -225,13 +159,9 @@ class UserService {
     await ResetTokenModel.deleteOne({ token });
     return { message: "Пароль успішно змінено" };
   }
-  async getUser(id) {
-    const user = await UserModel.findById(id);
-    if (!user) {
-      throw new Error("Користувач не знайдений");
-    }
-    const userDto = new UserDto(user);
-    return { user: userDto };
+  async getAllUsers() {
+    const users = await UserModel.find();
+    return users;
   }
 }
 

@@ -19,13 +19,10 @@ class StoreService {
         userId,
         title,
         description,
-        menu: [],
-        supplier: [],
-        rowsAll: [],
-        rowsDelivery: [],
-        rowsCustomer: [],
-        numberOfOrder: 1000000,
       });
+      if (!Array.isArray(user.stores)) {
+        user.stores = [];
+      }
       user.stores.push(newStore);
       await user.save();
       return newStore;
@@ -115,10 +112,13 @@ class StoreService {
   async addChangeDeleteCategory(formData, file) {
     try {
       const { action, storeId } = formData;
-      const oldCategory = formData.oldCategory ? JSON.parse(formData.oldCategory) : null;
-    const newCategory = formData.newCategory ? JSON.parse(formData.newCategory) : null;
+      const oldCategory = formData.oldCategory
+        ? JSON.parse(formData.oldCategory)
+        : null;
+      const newCategory = formData.newCategory
+        ? JSON.parse(formData.newCategory)
+        : null;
 
-      
       if (!mongoose.Types.ObjectId.isValid(storeId)) {
         throw new Error("Невірний формат storeId");
       }
@@ -137,7 +137,7 @@ class StoreService {
         store.categories = [...store.categories, newCategory];
       } else if (action === "change") {
         const index = store.categories.findIndex(
-          (item) => item.name.toUpperCase() === oldCategory.name.toUpperCase() 
+          (item) => item.name.toUpperCase() === oldCategory.name.toUpperCase()
         );
         if (index === -1) {
           throw new Error("Категорія не знайдена");

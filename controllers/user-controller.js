@@ -12,19 +12,16 @@ class UserController {
       //   );
       // }
 
-      const {
-        formData
-      } = req.body;
-console.log(req.body)
-      const userData = await UserService.registration(
-        formData
-      );
-
-      res.cookie("refreshToken", userData.refreshToken, {
+      const { formData } = req.body;
+      const userData = await UserService.registration(formData);
+      const cookieName = formData.customerStoreId
+        ? `refreshTokenStore_${formData.customerStoreId}`
+        : "refreshTokenAdmin";
+      res.cookie(cookieName, userData.refreshToken, {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        secure: true,
+        sameSite: 'None',
       });
       return res.json(userData);
     } catch (e) {
@@ -34,13 +31,16 @@ console.log(req.body)
   }
   async login(req, res, next) {
     try {
-      const { email, password } = req.body;
-      const userData = await UserService.login(email, password);
-      res.cookie("refreshToken", userData.refreshToken, {
+      const { formData } = req.body;
+      const userData = await UserService.login(formData);
+      const cookieName = formData.customerStoreId
+        ? `refreshTokenStore_${formData.customerStoreId}`
+        : "refreshTokenAdmin";
+      res.cookie(cookieName, userData.refreshToken, {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
+        secure: true,
+        sameSite: 'None',
       });
       return res.status(200).json(userData);
     } catch (e) {
@@ -50,9 +50,13 @@ console.log(req.body)
   }
   async logout(req, res, next) {
     try {
-      const { refreshToken } = req.cookies;
+      const { storeId } = req.query;
+      const cookieName = storeId
+        ? `refreshTokenStore_${storeId}`
+        : "refreshTokenAdmin";
+      const refreshToken = req.cookies[cookieName];
       const token = await UserService.logout(refreshToken);
-      res.clearCookie("refreshToken");
+      res.clearCookie(cookieName);
       return res.json(token);
     } catch (e) {
       next(e);
@@ -69,12 +73,16 @@ console.log(req.body)
   }
   async refresh(req, res, next) {
     try {
-      const { refreshToken } = req.cookies;
+      const { storeId } = req.query;
+      const cookieName = storeId
+        ? `refreshTokenStore_${storeId}`
+        : "refreshTokenAdmin";
+      const refreshToken = req.cookies[cookieName];
       if (!refreshToken) {
         return res.status(401).json({ message: "Refresh token not provided" });
       }
-      const userData = await UserService.refresh(refreshToken);
-      res.cookie("refreshToken", userData.refreshToken, {
+      const userData = await UserService.refresh(refreshToken, storeId);
+      res.cookie(cookieName, userData.refreshToken, {
         maxAge: 30 * 24 * 60 * 60 * 1000,
         httpOnly: true,
         secure: true,
@@ -91,7 +99,7 @@ console.log(req.body)
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return next(
-          ApiError.BadRequest("Помилка при валідації", errors.array()),
+          ApiError.BadRequest("Помилка при валідації", errors.array())
         );
       }
       const { email } = req.body;
@@ -113,10 +121,12 @@ console.log(req.body)
       return next(e);
     }
   }
-  async getUsers(req, res, next) {
+  async getUser(req, res, next) {
     try {
-      const users = await UserService.getAllUsers();
-      return res.json(users);
+      const { id } = req.params;
+      const user = await UserService.getUser(id);
+
+      return res.json(user);
     } catch (e) {
       next(e);
     }

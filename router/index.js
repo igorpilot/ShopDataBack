@@ -21,7 +21,7 @@ router.get("/activate/:link", UserController.activate);
 router.get("/refresh", UserController.refresh);
 router.post("/forgotPassword", UserController.forgotPassword);
 router.post("/resetPassword", UserController.resetPassword);
-router.get("/users", authMiddleware, UserController.getUsers);
+router.get("/user/:id", authMiddleware, UserController.getUser);
 router.post("/create", authMiddleware, StoreController.createStore);
 router.delete("/deleteStore", authMiddleware, StoreController.deleteStore);
 router.post(
